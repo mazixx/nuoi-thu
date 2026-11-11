@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
+
+<meta name="theme-color" content="#0f171e">
+<title>TAMAGOTCHI CONNECTION - Máy Nuôi Thú Ảo Huyền Thoại 9x</title>
+<style>
+    * { box-sizing: border-box; user-select: none; font-family: 'Courier New', Courier, monospace; }
+    body {
+        margin: 0; height: 100vh; display: flex; flex-direction: column;
+        justify-content: center; align-items: center;
+        background: radial-gradient(circle at center, #2c3e50 0%, #0f171e 100%);
+        overflow: hidden; color: #fff;
+    }
+
+    /* KHUNG MÁY TRỨNG TAMAGOTCHI 3D */
+    .tama-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; }
+
+    /* Dây móc khóa trên đỉnh */
+    .keychain-loop {
+        width: 34px; height: 28px; border: 7px solid #0940b0; border-radius: 50%;
+        position: absolute; top: -18px; left: 115px; z-index: 1;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .yellow-cap {
+        width: 110px; height: 25px; background: linear-gradient(90deg, #f39c12, #f1c40f, #e67e22);
+        border-radius: 50% 50% 0 0; position: absolute; top: -6px; right: 75px; z-index: 1;
+        border: 2px solid #b7791f;
+    }
+
+    /* Ăng-ten bên trái giống hệt ảnh */
+    .antenna {
+        position: absolute; top: 18px; left: 26px; width: 42px; height: 85px;
+        background: linear-gradient(90deg, #0b4ec4, #2979ff, #073896);
+        border-radius: 18px 18px 0 0; transform: rotate(-14deg); z-index: 1;
+        box-shadow: -4px 4px 10px rgba(0,0,0,0.4), inset 3px 3px 6px rgba(255,255,255,0.4);
+        border: 2px solid #052c7a;
+    }
+    .antenna::before, .antenna::after {
+        content: ''; position: absolute; left: -3px; width: 44px; height: 9px;
+        background: linear-gradient(90deg, #083c9e, #448aff, #062a70);
+        border-radius: 6px; border: 1px solid #052c7a;
+    }
+    .antenna::before { top: 14px; }
+    .antenna::after { top: 32px; }
+
+    /* Thân vỏ trứng màu xanh dương bóng */
+    .tama-shell {
+        width: 340px; height: 410px; position: relative; z-index: 2;
+        background: radial-gradient(circle at 32% 25%, #448aff 0%, #0d56d9 50%, #063185 95%);
+        border-radius: 50% 50% 47% 47% / 56% 56% 44% 44%;
+        box-shadow: 
+            0 25px 50px rgba(0,0,0,0.7),
+            inset -12px -15px 25px rgba(0,0,0,0.55),
+            inset 12px 15px 25px rgba(255,255,255,0.45);
+        display: flex; flex-direction: column; align-items: center;
+        border: 3px solid #042466;
+    }
+
+    /* Rãnh ngang trang trí trên vỏ nhựa */
+    .shell-groove-left, .shell-groove-right {
+        position: absolute; top: 185px; width: 55px; height: 105px;
+        border-top: 3px solid rgba(0,0,0,0.35); border-bottom: 3px solid rgba(255,255,255,0.25);
+        pointer-events: none;
+    }
+    .shell-groove-left { left: 4px; transform: skewY(12deg); }
+    .shell-groove-right { right: 4px; transform: skewY(-12deg); }
+
+    /* Logo TAMAGOTCHI CONNECTION */
+    .logo-sticker {
+        margin-top: 24px; background: #e8f4fc; padding: 3px 14px 5px;
+        border-radius: 14px; border: 2px solid #b8d8f0;
+        box-shadow: 0 3px 5px rgba(0,0,0,0.3); text-align: center;
+        transform: rotate(-1deg);
+    }
+    .logo-main {
+        font-family: 'Impact', 'Arial Black', sans-serif; font-size: 21px;
+        color: #e82c2a; letter-spacing: 1px; line-height: 1;
+        text-shadow: 1px 1px 0 #111, -1px -1px 0 #111;
+    }
+    .logo-sub {
+        font-family: 'Arial Black', sans-serif; font-size: 9px;
+        color: #d62828; letter-spacing: 2px; display: block; margin-top: 1px;
+    }
+
+    /* Viền răng cưa vỏ trứng nứt màu trắng nhạt quanh màn hình */
+    .cracked-bezel {
+        margin-top: 12px; width: 226px; height: 205px;
+        background: linear-gradient(145deg, #d6e8f5, #a9cbe3);
+        clip-path: polygon(
+            0% 18%, 14% 4%, 28% 13%, 50% 0%, 72% 13%, 86% 4%, 100% 18%,
+            95% 50%, 100% 82%, 85% 96%, 70% 88%, 50% 100%, 30% 88%, 15% 96%, 0% 82%, 5% 50%
+        );
+        display: flex; justify-content: center; align-items: center;
+        box-shadow: inset 0 0 12px rgba(0,0,0,0.4);
+    }
+
+    /* Khung lõm giữ màn hình LCD */
+    .screen-frame {
+        width: 174px; height: 158px; background: #606c64;
+        border-radius: 12px; padding: 6px;
+        box-shadow: inset 0 5px 10px rgba(0,0,0,0.7), 0 2px 3px rgba(255,255,255,0.6);
+        display: flex; justify-content: center; align-items: center;
+    }
+
+    canvas#lcd {
+        background: #8b9bb4; border-radius: 6px;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.45);
+    }
+
+    /* Cụm 4 nút bấm màu vàng chuẩn theo hình */
+    .buttons-area {
+        position: relative; width: 280px; height: 95px; margin-top: 6px;
+    }
+    .btn-wrap {
+        position: absolute; display: flex; flex-direction: column; align-items: center;
+    }
+    .yellow-btn {
+        width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+        background: radial-gradient(circle at 35% 30%, #fff275, #f1c40f 55%, #c29d0b 100%);
+        border: 3px solid #062a70;
+        box-shadow: 0 5px 0 #041b47, 0 7px 10px rgba(0,0,0,0.5);
+        transition: transform 0.08s, box-shadow 0.08s;
+        outline: none;
+    }
+    .yellow-btn:active, .yellow-btn.pressed {
+        transform: translateY(4px);
+        box-shadow: 0 1px 0 #041b47, 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .btn-label {
+        margin-top: 7px; font-family: 'Arial Narrow', Arial, sans-serif;
+        font-size: 10px; font-weight: bold; color: #021233;
+        letter-spacing: 0.5px; text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+    }
+
+    /* Định vị vòng cung cho 4 nút giống y hệt ảnh chụp */
+    .b-reset  { left: 10px;  top: -6px; transform: rotate(22deg); }
+    .b-select { left: 72px;  top: 22px; transform: rotate(8deg); }
+    .b-decide { left: 146px; top: 26px; transform: rotate(-5deg); }
+    .b-cancel { left: 218px; top: 12px; transform: rotate(-18deg); }
+
+    /* Hướng dẫn bên dưới máy */
+    .guide-bar {
+        margin-top: 18px; background: rgba(0,0,0,0.55); padding: 10px 20px;
+        border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+        font-size: 13px; text-align: center; line-height: 1.6;
+    }
+    .guide-bar b { color: #f1c40f; }
+/* ===== HỖ TRỢ ĐIỆN THOẠI VÀ GITHUB PAGES ===== */
+
+body {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: auto;
+    padding: 32px 12px 24px;
+}
+
+.tama-wrapper {
+    width: min(560px, 100%);
+    flex-shrink: 0;
+}
+
+.tama-shell {
+    width: min(340px, 100%);
+    flex-shrink: 0;
+}
+
+/* Giữ các phụ kiện theo vị trí thân máy,
+   không lệch theo chiều rộng phần hướng dẫn. */
+.keychain-loop {
+    left: calc(50% - 55px);
+}
+
+.yellow-cap {
+    right: calc(50% - 95px);
+}
+
+.antenna {
+    left: calc(50% - 144px);
+}
+
+.guide-bar {
+    width: 100%;
+    padding: 12px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.yellow-btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.yellow-btn:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 4px;
+}
+
+canvas#lcd {
+    image-rendering: pixelated;
+}
+</style>
+</head>
+<body>
+
+<div class="tama-wrapper">
+    <div class="keychain-loop"></div>
+    <div class="yellow-cap"></div>
+    <div class="antenna"></div>
+
+    <div class="tama-shell">
+        <div class="shell-groove-left"></div>
+        <div class="shell-groove-right"></div>
+
+        <!-- Logo chuẩn -->
+        <div class="logo-sticker">
+            <div class="logo-main">TAMAGOTCHI</div>
+            <span class="logo-sub">CONNECTION</span>
+        </div>
+
+        <!-- Viền trắng răng cưa & Màn hình LCD -->
+        <div class="cracked-bezel">
+            <div class="screen-frame">
+                <canvas id="lcd" width="160" height="144"></canvas>
+            </div>
+        </div>
+
+        <!-- 4 Nút bấm vật lý màu vàng -->
+        <div class="buttons-area">
+            <div class="btn-wrap b-reset">
+                <button class="yellow-btn" id="btn-r" onclick="pressReset()" title="Nuôi lại từ đầu"></button>
+                <span class="btn-label">RESET</span>
+            </div>
+            <div class="btn-wrap b-select">
+                <button class="yellow-btn" id="btn-a" onclick="pressSelect()" title="Chuyển mục (Phím Trái / A)"></button>
+                <span class="btn-label">SELECT</span>
+            </div>
+            <div class="btn-wrap b-decide">
+                <button class="yellow-btn" id="btn-b" onclick="pressDecide()" title="Chọn / Đồng ý (Phím Enter / Space)"></button>
+                <span class="btn-label">DECIDE</span>
+            </div>
+            <div class="btn-wrap b-cancel">
+                <button class="yellow-btn" id="btn-c" onclick="pressCancel()" title="Hủy / Thoát (Phím Esc / C)"></button>
+                <span class="btn-label">CANCEL</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="guide-bar">
+        🎮 Bấm trực tiếp lên <b>4 nút vàng</b> hoặc dùng bàn phím: 
+        <b>[A / Mũi tên]</b> = SELECT &nbsp;|&nbsp; 
+        <b>[S / Enter / Space]</b> = DECIDE &nbsp;|&nbsp; 
+        <b>[D / Esc]</b> = CANCEL &nbsp;|&nbsp; 
+        <b>[R]</b> = Đổi hình thú / Reset
+    </div>
+</div>
+
+<script>
+// ================= HỆ THỐNG ÂM THANH 8-BIT BEEP (WEB AUDIO API) =================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function beep(freq = 1200, duration = 0.06, type = "square", delay = 0) {
+    try {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + delay);
+        osc.stop(audioCtx.currentTime + delay + duration);
+    } catch (e) {}
+}
+
+function sfxSelect() { beep(1400, 0.045); }
+function sfxDecide() { beep(1600, 0.05, "square", 0); beep(2100, 0.07, "square", 0.06); }
+function sfxCancel() { beep(900, 0.06); }
+function sfxHappy()  { [1300, 1600, 2000, 2400].forEach((f, i) => beep(f, 0.07, "square", i * 0.08)); }
+function sfxSad()    { [1000, 800, 600].forEach((f, i) => beep(f, 0.12, "sawtooth", i * 0.14)); }
+
+// ================= CẤU HÌNH MÀN HÌNH MA TRẬN ĐIỂM ẢNH (LCD 32x24) =================
+const canvas = document.getElementById("lcd");
+const ctx = canvas.getContext("2d");
+const COLS = 32, ROWS = 20; // Vùng ma trận pixel ở giữa
+const PX = 5;               // Kích thước mỗi chấm pixel = 5x5
+const OFFSET_Y = 22;        // Dành 22px trên và 22px dưới cho thanh Icon cố định
+
+const COLOR_BG = "#879676";       // Xanh rêu LCD cổ điển
+const COLOR_PIXEL_OFF = "#7d8c6d";// Bóng mờ của điểm ảnh khi tắt
+const COLOR_PIXEL_ON = "#1c2418"; // Màu mực đen tinh thể lỏng khi bật
+
+// ================= SPRITES PIXEL ART (MA TRẬN 16x13) =================
+// Đặc biệt: ADULT_SPRITE_1 & 2 được vẽ chính xác 100% theo hình chụp chiếc máy của bạn!
+const SPRITES = {
+    EGG_1: [
+        "......1111......",
+        "....11....11....",
+        "...1..11....1...",
+        "..1..1111....1..",
+        "..1..........1..",
+        ".1......11....1.",
+        ".1.....1111...1.",
+        ".1......11....1.",
+        "..1..........1..",
+        "..1..11......1..",
+        "...1.11.....1...",
+        "....11....11....",
+        "......1111......"
+    ],
+    BABY_1: [
+        "................",
+        "................",
+        ".....111111.....",
+        "...11......11...",
+        "..1..1....1..1..",
+        "..1..........1..",
+        "..1...1111...1..",
+        "...11......11...",
+        ".....111111.....",
+        "....11....11....",
+        "................",
+        "................",
+        "................"
+    ],
+    // HÌNH THÚ TRƯỞNG THÀNH Y HỆT TRONG ẢNH CHỤP (Có râu chữ V, 2 cánh vẫy 2 bên, mỏ cười)
+    ADULT_1: [
+        "....11....11....",
+        ".....11..11.....",
+        "....11111111....",
+        "...11......11...",
+        "..11.1....1.11..",
+        ".111..1111..111.",
+        "1.11.11..11.11.1",
+        "1111..1111..1111",
+        "...11......11...",
+        "....11111111....",
+        "....11....11....",
+        "...111....111...",
+        "................"
+    ],
+    ADULT_2: [
+        "....11....11....",
+        ".....11..11.....",
+        "....11111111....",
+        "...11......11...",
+        "1.11.1....1.11.1",
+        "1111..1111..1111",
+        ".111..1111..111.",
+        "..11........11..",
+        "...11......11...",
+        "....11111111....",
+        ".....11..11.....",
+        "....111..111....",
+        "................"
+    ],
+    DINO_1: [
+        "......111111....",
+        ".....11....11...",
+        "....11.1....1...",
+        "....11......1...",
+        "....11..11111...",
+        "..1.111111......",
+        ".11111...111....",
+        "111.11....1.....",
+        "....11...11.....",
+        "....111111......",
+        ".....11..11.....",
+        "....111..111....",
+        "................"
+    ],
+    POOP: [
+        "..11..",
+        ".1..1.",
+        ".1111.",
+        "1....1",
+        "111111"
+    ],
+    SKULL: [
+        ".1111.",
+        "1.11.1",
+        "111111",
+        ".1.1.1",
+        ".1111."
+    ],
+    RICE: [
+        "...11...",
+        "..1..1..",
+        ".1....1.",
+        "1..11..1",
+        "1..11..1",
+        "11111111"
+    ],
+    CANDY: [
+        "1..11..1",
+        ".11..11.",
+        ".1.11.1.",
+        ".11..11.",
+        "1..11..1"
+    ]
+};
+
+// Danh sách 7 Icon trên và dưới màn hình
+const MENU_ICONS = [
+    { name: "CHỈ SỐ", icon: "📊" },
+    { name: "CHO ĂN", icon: "🍙" },
+    { name: "ĐÈN NGỦ", icon: "💡" },
+    { name: "TRÒ CHƠI", icon: "🎮" },
+    { name: "THUỐC",   icon: "💉" },
+    { name: "DỌN PHÂN",icon: "🚽" },
+    { name: "KHEN NGỢI",icon: "📣" }
+];
+
+// ================= TRẠNG THÁI CỦA THÚ ẢO =================
+let pet = {
+    stage: 2,          // Mặc định mở lên là con thú có cánh giống ảnh (0:Trứng, 1:Nhỏ, 2:Có cánh, 3:Khủng long)
+    age: 3,
+    weight: 18,
+    hunger: 3,         // Tối đa 4 tim
+    happy: 3,          // Tối đa 4 tim
+    poops: 1,          // Số cục phân trên màn hình
+    isSick: false,
+    lightsOn: true,
+    x: 8,              // Vị trí X trên lưới 32 cột
+    dir: 1
+};
+
+let ui = {
+    selectedIcon: -1,  // -1: Chưa chọn, 0..6: Các icon
+    mode: "IDLE",      // IDLE, STATUS, FEED_MENU, EATING, FLUSHING, GAME, HEALING, PRAISE
+    subPage: 0,
+    foodChoice: 0,     // 0: Cơm, 1: Kẹo
+    animTick: 0,
+    flushX: 32,
+    gameTarget: 0,     // 0: Trái, 1: Phải
+    gameResult: "",
+    emotionUntil: 0    // Thời gian thú nhảy mừng
+};
+
+// ================= XỬ LÝ 4 NÚT BẤM VẬT LÝ =================
+function flashBtn(id) {
+    const b = document.getElementById(id);
+    if (!b) return;
+    b.classList.add("pressed");
+    setTimeout(() => b.classList.remove("pressed"), 120);
+}
+
+// Nút 2: SELECT (Di chuyển vệt sáng qua các Icon hoặc đổi lựa chọn)
+function pressSelect() {
+    flashBtn("btn-a");
+    sfxSelect();
+
+    if (ui.mode === "IDLE") {
+        ui.selectedIcon = (ui.selectedIcon + 1) % MENU_ICONS.length;
+    } else if (ui.mode === "STATUS") {
+        ui.subPage = (ui.subPage + 1) % 3;
+    } else if (ui.mode === "FEED_MENU") {
+        ui.foodChoice = 1 - ui.foodChoice;
+    } else if (ui.mode === "GAME" && !ui.gameResult) {
+        playGuessGame(0); // Chọn Trái
+    }
+}
+
+// Nút 3: DECIDE (Xác nhận chọn mục đang sáng)
+function pressDecide() {
+    flashBtn("btn-b");
+
+    if (ui.mode === "IDLE") {
+        if (ui.selectedIcon === -1) {
+            ui.selectedIcon = 0;
+            sfxSelect();
+            return;
+        }
+        sfxDecide();
+        openMenuAction(ui.selectedIcon);
+    } else if (ui.mode === "STATUS") {
+        sfxSelect();
+        ui.subPage = (ui.subPage + 1) % 3;
+    } else if (ui.mode === "FEED_MENU") {
+        startEating(ui.foodChoice);
+    } else if (ui.mode === "GAME") {
+        if (!ui.gameResult) {
+            playGuessGame(1); // Chọn Phải
+        } else {
+            // Chơi ván tiếp theo
+            ui.gameResult = "";
+            sfxSelect();
+        }
+    }
+}
+
+// Nút 4: CANCEL (Thoát ra màn hình chính)
+function pressCancel() {
+    flashBtn("btn-c");
+    sfxCancel();
+    if (ui.mode === "IDLE") {
+        ui.selectedIcon = -1;
+    } else {
+        ui.mode = "IDLE";
+    }
+}
+
+// Nút 1: RESET (Đổi hình dạng tiến hóa hoặc nuôi lại)
+function pressReset() {
+    flashBtn("btn-r");
+    sfxHappy();
+    pet.stage = (pet.stage + 1) % 4;
+    if (pet.stage === 0) {
+        // Khi về trứng thì khôi phục đầy đủ chỉ số
+        pet.hunger = 4; pet.happy = 4; pet.poops = 0; pet.isSick = false; pet.lightsOn = true;
+    }
+    ui.mode = "IDLE";
+}
+
+// ================= CÁC HÀNH ĐỘNG CHĂM SÓC THÚ =================
+function openMenuAction(idx) {
+    if (!pet.lightsOn && idx !== 2 && idx !== 0) {
+        // Đang tắt đèn ngủ thì không cho ăn hay chơi
+        sfxSad();
+        return;
+    }
+    switch (idx) {
+        case 0: // Xem chỉ số
+            ui.mode = "STATUS";
+            ui.subPage = 0;
+            break;
+        case 1: // Cho ăn
+            ui.mode = "FEED_MENU";
+            ui.foodChoice = 0;
+            break;
+        case 2: // Bật / Tắt đèn ngủ
+            pet.lightsOn = !pet.lightsOn;
+            ui.mode = "IDLE";
+            break;
+        case 3: // Chơi mini-game đoán hướng
+            ui.mode = "GAME";
+            ui.gameResult = "";
+            break;
+        case 4: // Tiêm thuốc chữa bệnh
+            ui.mode = "HEALING";
+            pet.isSick = false;
+            pet.happy = Math.min(4, pet.happy + 1);
+            sfxHappy();
+            setTimeout(() => { if (ui.mode === "HEALING") ui.mode = "IDLE"; }, 1800);
+            break;
+        case 5: // Dọn phân (Sóng nước xả bồn cầu)
+            ui.mode = "FLUSHING";
+            ui.flushX = 32;
+            break;
+        case 6: // Huấn luyện / Khen ngợi
+            ui.mode = "PRAISE";
+            pet.happy = Math.min(4, pet.happy + 1);
+            sfxHappy();
+            setTimeout(() => { if (ui.mode === "PRAISE") ui.mode = "IDLE"; }, 1800);
+            break;
+    }
+}
+
+function startEating(choice) {
+    ui.mode = "EATING";
+    sfxHappy();
+    if (choice === 0) { // Ăn cơm nắm
+        pet.hunger = Math.min(4, pet.hunger + 1);
+        pet.weight += 2;
+    } else {            // Ăn kẹo
+        pet.happy = Math.min(4, pet.happy + 1);
+        pet.weight += 1;
+    }
+    setTimeout(() => {
+        if (ui.mode === "EATING") {
+            ui.mode = "IDLE";
+            ui.emotionUntil = Date.now() + 2000;
+        }
+    }, 1800);
+}
+
+function playGuessGame(userDir) {
+    ui.gameTarget = Math.random() < 0.5 ? 0 : 1;
+    if (userDir === ui.gameTarget) {
+        ui.gameResult = "WIN";
+        pet.happy = Math.min(4, pet.happy + 1);
+        pet.weight = Math.max(5, pet.weight - 1);
+        sfxHappy();
+    } else {
+        ui.gameResult = "LOSE";
+        sfxSad();
+    }
+}
+
+// Điều khiển bàn phím máy tính.
+window.addEventListener("keydown", event => {
+    const active = document.activeElement;
+
+    if (
+        active
+        && (
+            active.matches("input, textarea, select")
+            || active.isContentEditable
+        )
+    ) {
+        return;
+    }
+
+    // Khi nút HTML đang được chọn, để trình duyệt xử lý
+    // Enter/Space, tránh vừa click nút vừa chạy phím game.
+    if (
+        active
+        && active.tagName === "BUTTON"
+        && (event.key === "Enter" || event.code === "Space")
+    ) {
+        return;
+    }
+
+    const key = event.key.toLowerCase();
+
+    const supported = [
+        "a", "arrowleft", "arrowright",
+        "s", "enter", " ",
+        "d", "escape", "backspace",
+        "r"
+    ];
+
+    if (!supported.includes(key)) {
+        return;
+    }
+
+    event.preventDefault();
+
+    // Giữ phím không tự lặp nhiều thao tác.
+    if (event.repeat) {
+        return;
+    }
+
+    if (["a", "arrowleft", "arrowright"].includes(key)) {
+        pressSelect();
+    } else if (["s", "enter", " "].includes(key)) {
+        pressDecide();
+    } else if (["d", "escape", "backspace"].includes(key)) {
+        pressCancel();
+    } else if (key === "r") {
+        pressReset();
+    }
+});
+// ================= HÀM VẼ ĐIỂM ẢNH MA TRẬN LCD =================
+function setPixel(gx, gy, on = true) {
+    if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) return;
+    ctx.fillStyle = on ? COLOR_PIXEL_ON : COLOR_PIXEL_OFF;
+    ctx.fillRect(gx * PX + 0.5, OFFSET_Y + gy * PX + 0.5, PX - 1, PX - 1);
+}
+
+function drawSprite(spriteArr, startX, startY, flipX = false) {
+    for (let r = 0; r < spriteArr.length; r++) {
+        let rowStr = spriteArr[r];
+        for (let c = 0; c < rowStr.length; c++) {
+            if (rowStr[c] === "1") {
+                let drawCol = flipX ? (rowStr.length - 1 - c) : c;
+                setPixel(startX + drawCol, startY + r, true);
+            }
+        }
+    }
+}
+
+function drawLCDText(text, x, y, size = 10) {
+    ctx.fillStyle = COLOR_PIXEL_ON;
+    ctx.font = `bold ${size}px 'Courier New', monospace`;
+    ctx.fillText(text, x, y);
+}
+
+// ================= VÒNG LẶP VẼ MÀN HÌNH CHÍNH =================
+function renderLCD() {
+    // 1. Nền màn hình LCD xanh rêu
+    ctx.fillStyle = COLOR_BG;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 2. Vẽ thanh 7 Icon trên & dưới
+    ctx.font = "12px Arial";
+    ctx.textAlign = "center";
+    for (let i = 0; i < MENU_ICONS.length; i++) {
+        let isTop = i < 4;
+        let ix = isTop ? (22 + i * 38) : (32 + (i - 4) * 46);
+        let iy = isTop ? 15 : 138;
+
+        if (ui.selectedIcon === i) {
+            ctx.fillStyle = COLOR_PIXEL_ON;
+            ctx.fillRect(ix - 12, iy - 12, 24, 15);
+            ctx.fillStyle = COLOR_BG;
+        } else {
+            ctx.globalAlpha = 0.35;
+            ctx.fillStyle = COLOR_PIXEL_ON;
+        }
+        ctx.fillText(MENU_ICONS[i].icon, ix, iy);
+        ctx.globalAlpha = 1.0;
+    }
+
+    // 3. Kẻ khung lưới điểm ảnh mờ (Tạo hiệu ứng LCD thật)
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            setPixel(c, r, false);
+        }
+    }
+
+    // 4. Nếu đang TẮT ĐÈN NGỦ
+    if (!pet.lightsOn && ui.mode === "IDLE") {
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if ((r + c) % 2 === 0) setPixel(c, r, true);
+            }
+        }
+        ctx.fillStyle = COLOR_BG;
+        ctx.fillRect(45, 48, 70, 32);
+        drawLCDText("Z z z...", 52, 68, 12);
+        return;
+    }
+
+    // 5. Vẽ theo từng Chế độ (Mode)
+    let frameToggle = Math.floor(ui.animTick / 25) % 2 === 0;
+
+    if (ui.mode === "IDLE") {
+        // Vẽ thú cưng theo giai đoạn
+        let sp = SPRITES.ADULT_1;
+        if (pet.stage === 0) sp = SPRITES.EGG_1;
+        else if (pet.stage === 1) sp = SPRITES.BABY_1;
+        else if (pet.stage === 2) sp = frameToggle ? SPRITES.ADULT_1 : SPRITES.ADULT_2;
+        else if (pet.stage === 3) sp = SPRITES.DINO_1;
+
+        let bounceY = (Date.now() < ui.emotionUntil) ? (frameToggle ? 1 : 4) : (frameToggle ? 3 : 4);
+        drawSprite(sp, pet.x, bounceY, pet.dir === -1);
+
+        // Vẽ cục phân nếu có (bên góc phải)
+        for (let p = 0; p < pet.poops; p++) {
+            drawSprite(SPRITES.POOP, 25, 13 - p * 6, false);
+        }
+
+        // Vẽ biểu tượng đầu lâu nếu bị ốm
+        if (pet.isSick && frameToggle) {
+            drawSprite(SPRITES.SKULL, 2, 2, false);
+        }
+
+    } else if (ui.mode === "STATUS") {
+        ctx.textAlign = "left";
+        if (ui.subPage === 0) {
+            drawLCDText("ĐỘ NO (HUNGRY)", 12, 42, 11);
+            drawLCDText("♥ ".repeat(pet.hunger) + "♡ ".repeat(4 - pet.hunger), 24, 65, 16);
+            drawLCDText("[SELECT: Tiếp]", 30, 105, 10);
+        } else if (ui.subPage === 1) {
+            drawLCDText("ĐỘ VUI (HAPPY)", 12, 42, 11);
+            drawLCDText("♥ ".repeat(pet.happy) + "♡ ".repeat(4 - pet.happy), 24, 65, 16);
+            drawLCDText("[SELECT: Tiếp]", 30, 105, 10);
+        } else {
+            drawLCDText(`TUỔI  : ${pet.age} Năm`, 16, 48, 12);
+            drawLCDText(`NẶNG  : ${pet.weight} Gram`, 16, 72, 12);
+            drawLCDText(`LOÀI  : Cấp ${pet.stage + 1}/4`, 16, 96, 12);
+        }
+
+    } else if (ui.mode === "FEED_MENU") {
+        ctx.textAlign = "left";
+        drawLCDText("CHỌN THỨC ĂN:", 18, 42, 11);
+        drawLCDText(`${ui.foodChoice === 0 ? "▶" : " "} CƠM NẮM (+No)`, 16, 68, 12);
+        drawLCDText(`${ui.foodChoice === 1 ? "▶" : " "} KẸO NGỌT (+Vui)`, 16, 92, 12);
+
+    } else if (ui.mode === "EATING") {
+        let foodSp = ui.foodChoice === 0 ? SPRITES.RICE : SPRITES.CANDY;
+        drawSprite(foodSp, 4, 6, false);
+        drawSprite(frameToggle ? SPRITES.ADULT_1 : SPRITES.ADULT_2, 13, 3, false);
+        ctx.textAlign = "center";
+        drawLCDText("Măm măm... Ngon!", 80, 112, 11);
+
+    } else if (ui.mode === "FLUSHING") {
+        // Sóng nước quét ngang màn hình dọn sạch phân
+        for (let r = 2; r < ROWS - 2; r++) {
+            let waveCol = ui.flushX + (r % 2);
+            setPixel(waveCol, r, true);
+            setPixel(waveCol + 1, r, true);
+        }
+
+    } else if (ui.mode === "GAME") {
+        ctx.textAlign = "center";
+        if (!ui.gameResult) {
+            drawLCDText("ĐOÁN HƯỚNG QUAY!", 80, 38, 11);
+            drawSprite(SPRITES.ADULT_1, 8, 4, false);
+            drawLCDText("SELECT=Trái | DECIDE=Phải", 80, 114, 9);
+        } else {
+            drawSprite(SPRITES.ADULT_2, 8, 3, ui.gameTarget === 1);
+            drawLCDText(ui.gameResult === "WIN" ? "🎉 THẮNG RỒI! (+1 Vui)" : "💦 ĐOÁN SAI RỒI!", 80, 100, 11);
+            drawLCDText("[DECIDE: Chơi tiếp]", 80, 115, 9);
+        }
+
+    } else if (ui.mode === "HEALING") {
+        drawSprite(SPRITES.ADULT_2, 8, 3, false);
+        ctx.textAlign = "center";
+        drawLCDText("💉 Đã tiêm thuốc khỏe!", 80, 112, 11);
+
+    } else if (ui.mode === "PRAISE") {
+        drawSprite(SPRITES.ADULT_2, 8, frameToggle ? 2 : 4, false);
+        ctx.textAlign = "center";
+        drawLCDText("❤️ Thú rất ngoan! (+Vui)", 80, 112, 11);
+    }
+}
+
+/* ===== LOGIC CỐ ĐỊNH 60 NHỊP/GIÂY ===== */
+
+function updateLogic() {
+    ui.animTick++;
+
+    // Thú tự đi lại khi thức và không còn ở giai đoạn trứng.
+    if (
+        ui.mode === "IDLE"
+        && pet.lightsOn
+        && pet.stage > 0
+        && ui.animTick % 45 === 0
+    ) {
+        pet.x += pet.dir;
+
+        if (pet.x > 12) {
+            pet.x = 12;
+            pet.dir = -1;
+        }
+
+        if (pet.x < 3) {
+            pet.x = 3;
+            pet.dir = 1;
+        }
+    }
+
+    // Hiệu ứng dọn phân.
+    if (
+        ui.mode === "FLUSHING"
+        && ui.animTick % 2 === 0
+    ) {
+        ui.flushX -= 2;
+
+        beep(
+            600 + ui.flushX * 25,
+            0.02,
+            "triangle"
+        );
+
+        if (ui.flushX < -2) {
+            pet.poops = 0;
+            ui.mode = "IDLE";
+            ui.emotionUntil = Date.now() + 2000;
+
+            sfxHappy();
+        }
+    }
+
+    // Chu kỳ chăm sóc khoảng 15 giây khi tab hoạt động.
+    if (ui.animTick % 900 === 0) {
+        if (pet.hunger > 0) {
+            pet.hunger--;
+        }
+
+        if (pet.happy > 0 && Math.random() < 0.5) {
+            pet.happy--;
+        }
+
+        if (pet.poops < 2 && Math.random() < 0.45) {
+            pet.poops++;
+            beep(500, 0.1, "sawtooth");
+        }
+
+        if (pet.poops >= 2) {
+            pet.isSick = true;
+        }
+    }
+}
+
+const LOGIC_STEP = 1 / 60;
+
+let previousFrame = performance.now();
+let accumulatedTime = 0;
+
+function gameLoop(now) {
+    const elapsed = Math.max(
+        0,
+        Math.min((now - previousFrame) / 1000, 0.1)
+    );
+
+    previousFrame = now;
+
+    if (document.hidden) {
+        accumulatedTime = 0;
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
+    accumulatedTime += elapsed;
+
+    while (accumulatedTime >= LOGIC_STEP) {
+        updateLogic();
+        accumulatedTime -= LOGIC_STEP;
+    }
+
+    renderLCD();
+    requestAnimationFrame(gameLoop);
+}
+
+document.addEventListener("visibilitychange", () => {
+    previousFrame = performance.now();
+    accumulatedTime = 0;
+});
+
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
